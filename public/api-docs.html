@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenMetadata AI Gateway — Docs</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2338bdf8'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='20' fill='white'>&#x26A1;</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Outfit', sans-serif; background: #070b14; color: #e2e8f0; overflow-x: hidden; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    ul, ol { list-style: none; }
+    button { font-family: 'Outfit', sans-serif; cursor: pointer; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: #070b14; }
+    ::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 4px; }
+
+    #bg { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 65% 45% at 10% 5%, rgba(56,189,248,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 88% 88%, rgba(167,139,250,0.10) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 38% at 55% 45%, rgba(34,211,238,0.06) 0%, transparent 60%), #070b14; }
+    #bg::after { content: ''; position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+      background-size: 48px 48px; animation: gridscroll 28s linear infinite; }
+    @keyframes gridscroll { from { background-position: 0 0; } to { background-position: 48px 48px; } }
+
+    #app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+    #topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 58px;
+      background: rgba(7,11,20,0.90); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 28px; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    #menu-btn { display: none; background: none; border: none; color: #64748b; font-size: 18px; transition: color 0.2s; padding: 4px; }
+    #menu-btn:hover { color: #38bdf8; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg,#38bdf8,#a78bfa); display: flex; align-items: center; justify-content: center; flex-shrink: 0; animation: logopulse 3.5s ease-in-out infinite; }
+    .logo-icon i { color: #fff; font-size: 13px; }
+    @keyframes logopulse { 0%,100% { box-shadow: 0 0 16px rgba(56,189,248,0.45); } 50% { box-shadow: 0 0 38px rgba(56,189,248,0.85), 0 0 64px rgba(167,139,250,0.35); } }
+    .logo-name { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+    .logo-name span { color: #38bdf8; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .live-badge { display: flex; align-items: center; gap: 7px; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; animation: blink 2.4s ease-in-out infinite; }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+    .live-version { font-family: 'Fira Code', monospace; font-size: 11px; color: #64748b; }
+    .btn-swagger { display: flex; align-items: center; gap: 7px; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 8px; transition: background 0.2s, box-shadow 0.2s; }
+    .btn-swagger:hover { background: rgba(56,189,248,0.18); box-shadow: 0 0 16px rgba(56,189,248,0.25); }
+    .btn-quickstart { display: flex; align-items: center; gap: 7px; background: linear-gradient(135deg,#38bdf8,#a78bfa); border: none; color: #fff; font-size: 13px; font-weight: 700; padding: 8px 18px; border-radius: 8px; box-shadow: 0 4px 20px rgba(56,189,248,0.3); transition: transform 0.2s, box-shadow 0.2s; }
+    .btn-quickstart:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(56,189,248,0.5); }
+
+    #body { display: flex; padding-top: 58px; }
+
+    #sidebar { width: 232px; min-width: 232px; position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; overflow-x: hidden; background: rgba(10,15,30,0.82); backdrop-filter: blur(14px); border-right: 1px solid rgba(255,255,255,0.055); padding: 24px 12px; scrollbar-width: none; }
+    #sidebar::-webkit-scrollbar { display: none; }
+    .nav-group { margin-bottom: 24px; }
+    .nav-group-label { display: block; font-family: 'Fira Code', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #334155; padding: 0 12px; margin-bottom: 6px; }
+    .nav-link { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #64748b; border-left: 2px solid transparent; transition: color 0.18s, background 0.18s, border-color 0.18s; margin-bottom: 2px; }
+    .nav-link i { font-size: 11px; width: 14px; text-align: center; flex-shrink: 0; }
+    .nav-link:hover { color: #38bdf8; background: rgba(56,189,248,0.07); border-left-color: rgba(56,189,248,0.4); }
+    .nav-link.active { color: #38bdf8; background: rgba(56,189,248,0.09); border-left-color: #38bdf8; }
+
+    #main { flex: 1; min-width: 0; padding: 48px 56px 80px; max-width: 900px; }
+    .doc-section { margin-bottom: 64px; }
+    .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .section-icon { width: 34px; height: 34px; border-radius: 8px; background: rgba(56,189,248,0.09); border: 1px solid rgba(56,189,248,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-icon i { color: #38bdf8; font-size: 13px; }
+    .section-head h2 { font-size: 22px; font-weight: 800; color: #fff; }
+
+    #hero { border-radius: 20px; padding: 52px; margin-bottom: 60px; position: relative; overflow: hidden; border: 1px solid rgba(56,189,248,0.13); background: linear-gradient(135deg, rgba(56,189,248,0.06) 0%, rgba(167,139,250,0.05) 50%, rgba(10,15,30,0.90) 100%); }
+    .hero-blob-1 { position: absolute; top: 0; right: 0; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(167,139,250,0.4), transparent 70%); transform: translate(36%,-36%); pointer-events: none; }
+    .hero-blob-2 { position: absolute; bottom: 0; left: 0; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(56,189,248,0.4), transparent 70%); transform: translate(-36%,36%); pointer-events: none; opacity: 0.6; }
+    .hero-inner { position: relative; }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .badge { font-family: 'Fira Code', monospace; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 100px; letter-spacing: 0.04em; }
+    .badge-sky { color: #38bdf8; border: 1px solid rgba(56,189,248,0.28); background: linear-gradient(90deg, rgba(56,189,248,0.12) 25%, rgba(56,189,248,0.28) 50%, rgba(56,189,248,0.12) 75%); background-size: 200% auto; animation: shimmer 3s linear infinite; }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    .badge-violet { color: #a78bfa; border: 1px solid rgba(167,139,250,0.28); background: rgba(167,139,250,0.10); }
+    .badge-green  { color: #4ade80; border: 1px solid rgba(74,222,128,0.25);  background: rgba(74,222,128,0.08); }
+
+    #hero-title { font-size: clamp(34px,5vw,56px); font-weight: 900; line-height: 1.12; color: #fff; margin-bottom: 16px; min-height: 2.4em; }
+    .typed-line { display: block; }
+
+    /* Gradient only on the text span, NOT on cursor */
+    #typed-text { background: linear-gradient(135deg,#38bdf8 0%,#22d3ee 40%,#a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* Cursor is a block element — solid color, overrides any inherited fill */
+    #cursor { display: inline-block; width: 3px; height: 0.78em; background: #38bdf8; border-radius: 1px; margin-left: 4px; vertical-align: middle; -webkit-text-fill-color: initial; color: initial; animation: cursorBlink 0.85s step-end infinite; }
+    @keyframes cursorBlink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+
+    .hero-desc { font-size: 16px; color: #94a3b8; max-width: 520px; line-height: 1.7; margin-bottom: 36px; }
+    .hero-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
+    .stat { border-left: 2px solid rgba(56,189,248,0.5); padding-left: 14px; }
+    .stat-val { font-size: 24px; font-weight: 900; color: #38bdf8; }
+    .stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    .card { background: rgba(10,15,30,0.78); border: 1px solid rgba(56,189,248,0.12); border-radius: 16px; transition: border-color 0.3s, box-shadow 0.3s, transform 0.25s; }
+    .card:hover { border-color: rgba(56,189,248,0.28); box-shadow: 0 0 28px rgba(56,189,248,0.08); transform: translateY(-1px); }
+    .card-p { padding: 20px; }
+
+    .arch-flow { display: flex; align-items: stretch; gap: 0; margin-bottom: 24px; }
+    .arch-node { flex: 1; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 24px 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; transition: border-color 0.3s; }
+    .arch-node:hover { border-color: rgba(56,189,248,0.22); }
+    .arch-node-icon { width: 54px; height: 54px; border-radius: 13px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; }
+    .arch-node-icon i { font-size: 22px; color: #94a3b8; }
+    .arch-node-label { font-size: 13px; font-weight: 700; color: #fff; }
+    .arch-node-sub { font-family: 'Fira Code', monospace; font-size: 10px; color: #334155; }
+    .arch-gateway { flex: 1.5; border-color: rgba(56,189,248,0.22); background: rgba(56,189,248,0.04); }
+    .arch-gateway-title { font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 14px; }
+    .arch-feature-list { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    .arch-feature { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; font-size: 12px; color: #94a3b8; }
+    .arch-feature i { color: #38bdf8; font-size: 11px; width: 14px; text-align: center; flex-shrink: 0; }
+    .arch-arrow { display: flex; align-items: center; justify-content: center; padding: 0 12px; flex-shrink: 0; }
+    .arch-arrow-inner { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .arch-arrow-line { width: 2px; height: 40px; background: linear-gradient(180deg,transparent,rgba(56,189,248,0.5),transparent); }
+    .arch-arrow-head { color: #38bdf8; font-size: 11px; }
+    .arch-endpoints { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 22px; }
+    .arch-ep { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; transition: border-color 0.3s; }
+    .arch-ep:hover { border-color: rgba(56,189,248,0.22); }
+    .arch-ep i { font-size: 18px; }
+    .arch-ep-name { font-family: 'Fira Code', monospace; font-size: 12px; color: #94a3b8; }
+    .arch-ep-desc { font-size: 11px; color: #334155; line-height: 1.4; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { display: flex; align-items: center; gap: 6px; font-family: 'Fira Code', monospace; font-size: 11px; padding: 5px 12px; border-radius: 100px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); color: #94a3b8; transition: border-color 0.2s, color 0.2s; }
+    .chip:hover { border-color: rgba(56,189,248,0.3); color: #38bdf8; }
+
+    .step-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#38bdf8,#a78bfa); color: #070b14; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step-title { font-size: 14px; font-weight: 600; color: #fff; }
+
+    .code-wrap { background: #060a10; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; position: relative; overflow: hidden; }
+    .code-wrap pre { overflow-x: auto; padding: 18px 48px 18px 18px; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.75; color: #cbd5e1; white-space: pre; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #334155; font-size: 13px; transition: color 0.18s; }
+    .copy-btn:hover { color: #38bdf8; }
+
+    .tab-bar { display: flex; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 16px; }
+    .tab-btn { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #475569; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.18s, border-color 0.18s; }
+    .tab-btn:hover { color: #94a3b8; }
+    .tab-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+    .tab-pane.hidden { display: none; }
+
+    .acc-btn { width: 100%; text-align: left; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: none; border: none; }
+    .acc-btn-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .acc-endpoint { font-family: 'Fira Code', monospace; font-size: 14px; font-weight: 600; color: #fff; }
+    .acc-desc-inline { font-size: 13px; color: #64748b; }
+    .acc-icon { color: #475569; font-size: 13px; flex-shrink: 0; transition: transform 0.3s ease; }
+    .acc-btn.open .acc-icon { transform: rotate(180deg); }
+    .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+    .acc-body.open { max-height: 5000px; }
+    .acc-inner { padding: 0 20px 20px; }
+    .acc-desc-text { font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.6; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .tag { font-family: 'Fira Code', monospace; font-size: 10px; padding: 3px 10px; border-radius: 100px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); color: #475569; }
+    .method { font-family: 'Fira Code', monospace; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 5px; background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.28); letter-spacing: 0.06em; }
+    .ep-card { border-top: 2px solid rgba(56,189,248,0.28); }
+
+    .doc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .doc-table th { text-align: left; padding: 14px 16px; font-family: 'Fira Code', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #38bdf8; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .doc-table td { padding: 13px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #94a3b8; vertical-align: middle; }
+    .doc-table tr:last-child td { border-bottom: none; }
+    .doc-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .doc-table code { font-family: 'Fira Code', monospace; font-size: 12px; color: #7dd3fc; background: rgba(56,189,248,0.08); padding: 2px 7px; border-radius: 4px; }
+    .req-yes { font-family: 'Fira Code', monospace; font-size: 10px; color: #f87171; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); padding: 2px 8px; border-radius: 4px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .inner-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+    .inner-title i { color: #38bdf8; }
+    .auth-step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .auth-step:last-child { border-bottom: none; }
+    .auth-num { font-family: 'Fira Code', monospace; font-size: 11px; font-weight: 700; color: #38bdf8; flex-shrink: 0; width: 22px; }
+    .auth-text { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+    .auth-text strong { color: #e2e8f0; font-weight: 600; }
+    .security-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; }
+    .security-item i { margin-top: 1px; font-size: 13px; flex-shrink: 0; }
+    .security-item p { font-size: 13px; color: #94a3b8; }
+    .security-item code { font-family: 'Fira Code', monospace; font-size: 11px; color: #38bdf8; background: rgba(56,189,248,0.08); padding: 1px 6px; border-radius: 4px; }
+
+    .divider { display: flex; align-items: center; gap: 16px; margin: 56px 0 40px; }
+    .divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(56,189,248,0.2), transparent); }
+    .divider-label { font-family: 'Fira Code', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #334155; }
+
+    .error-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 18px; }
+    .error-card { padding: 18px; }
+    .error-code { font-family: 'Fira Code', monospace; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .error-name { font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; }
+    .error-desc { font-size: 11px; color: #334155; line-height: 1.5; }
+
+    .rate-icon-box { width: 52px; height: 52px; border-radius: 12px; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rate-icon-box i { color: #38bdf8; font-size: 20px; }
+    .rate-label { font-family: 'Fira Code', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #334155; margin-bottom: 12px; }
+
+    .scripts-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .script-card { padding: 16px; }
+    .script-cmd { font-family: 'Fira Code', monospace; font-size: 13px; font-weight: 600; color: #38bdf8; margin-bottom: 4px; }
+    .script-desc { font-size: 12px; color: #64748b; }
+
+    footer { border-top: 1px solid rgba(255,255,255,0.05); padding: 32px 0 48px; text-align: center; }
+    .footer-logo { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .footer-name { font-size: 14px; font-weight: 800; color: #fff; }
+    .footer-name span { color: #38bdf8; }
+    .footer-copy { font-family: 'Fira Code', monospace; font-size: 11px; color: #334155; }
+
+    #top-btn { position: fixed; bottom: 24px; right: 24px; z-index: 50; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#38bdf8,#a78bfa); border: none; color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(56,189,248,0.4); opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s; }
+    #top-btn.show { opacity: 1; pointer-events: all; transform: translateY(0); }
+
+    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 40; }
+
+    @media (max-width: 1024px) {
+      #sidebar { position: fixed; left: 0; top: 58px; bottom: 0; z-index: 50; transform: translateX(-100%); transition: transform 0.3s ease; }
+      #sidebar.open { transform: translateX(0); }
+      #menu-btn { display: flex; }
+      #main { padding: 32px 24px 80px; }
+      .hero-stats { grid-template-columns: repeat(2,1fr); }
+      .two-col { grid-template-columns: 1fr; }
+      .arch-flow { flex-direction: column; }
+      .arch-arrow { transform: rotate(90deg); padding: 10px 0; }
+      .arch-endpoints { grid-template-columns: repeat(2,1fr); }
+      .error-grid { grid-template-columns: repeat(2,1fr); }
+      .scripts-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 600px) {
+      #hero { padding: 32px 24px; }
+      .live-badge { display: none; }
+      .btn-swagger { display: none; }
+      .error-grid { grid-template-columns: 1fr; }
+      .scripts-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="bg"></div>
+  <div id="app">
+
+    <!-- TOPBAR -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <button id="menu-btn" onclick="toggleSidebar()" aria-label="Open menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+        <span class="logo-name">OpenMetadata <span>AI Gateway</span></span>
+      </div>
+      <div class="topbar-right">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span class="live-version">v1.0.0</span>
+        </div>
+        <a href="http://localhost:3000/swagger" target="_blank" class="btn-swagger">
+          <i class="fa-solid fa-flask" style="font-size:12px"></i> Swagger UI
+        </a>
+        <a href="#quick-start" class="btn-quickstart">
+          <i class="fa-solid fa-rocket" style="font-size:12px"></i> Quick Start
+        </a>
+      </div>
+    </header>
+
+    <div id="body">
+
+      <!-- SIDEBAR -->
+      <aside id="sidebar">
+        <nav>
+          <div class="nav-group">
+            <span class="nav-group-label">Getting Started</span>
+            <a href="#overview"     class="nav-link"><i class="fa-solid fa-book-open"></i> Overview</a>
+            <a href="#architecture" class="nav-link"><i class="fa-solid fa-diagram-project"></i> Architecture</a>
+            <a href="#quick-start"  class="nav-link"><i class="fa-solid fa-rocket"></i> Quick Start</a>
+            <a href="#auth"         class="nav-link"><i class="fa-solid fa-shield-halved"></i> Authentication</a>
+            <a href="#env"          class="nav-link"><i class="fa-solid fa-sliders"></i> Environment</a>
+          </div>
+          <div class="nav-group">
+            <span class="nav-group-label">API Reference</span>
+            <a href="#ep-ask"    class="nav-link"><i class="fa-solid fa-magnifying-glass"></i> POST /ask</a>
+            <a href="#ep-impact" class="nav-link"><i class="fa-solid fa-code-branch"></i> POST /impact</a>
+            <a href="#ep-sql"    class="nav-link"><i class="fa-solid fa-database"></i> POST /sql</a>
+            <a href="#ep-alerts" class="nav-link"><i class="fa-solid fa-bell"></i> POST /alerts</a>
+          </div>
+          <div class="nav-group">
+            <span class="nav-group-label">Reference</span>
+            <a href="#validation"  class="nav-link"><i class="fa-solid fa-circle-check"></i> Validation</a>
+            <a href="#errors"      class="nav-link"><i class="fa-solid fa-triangle-exclamation"></i> Errors</a>
+            <a href="#rate-limits" class="nav-link"><i class="fa-solid fa-gauge"></i> Rate Limits</a>
+            <a href="#scripts"     class="nav-link"><i class="fa-solid fa-terminal"></i> Scripts</a>
+          </div>
+        </nav>
+      </aside>
+
+      <div id="overlay" onclick="toggleSidebar()"></div>
+
+      <!-- MAIN -->
+      <main id="main">
+
+        <!-- HERO -->
+        <section id="overview" class="doc-section">
+          <div id="hero">
+            <div class="hero-blob-1"></div>
+            <div class="hero-blob-2"></div>
+            <div class="hero-inner">
+              <div class="hero-badges">
+                <span class="badge badge-sky">REST API</span>
+                <span class="badge badge-violet">v1.0.0</span>
+                <span class="badge badge-green">Production Ready</span>
+              </div>
+              <h1 id="hero-title">
+                OpenMetadata
+                <span class="typed-line">
+                  <span id="typed-text"></span><span id="cursor"></span>
+                </span>
+              </h1>
+              <p class="hero-desc">
+                Natural language interface for data catalog operations —
+                AI-powered querying, impact analysis, SQL generation, and quality alerting.
+              </p>
+              <div class="hero-stats">
+                <div class="stat"><div class="stat-val">4</div><div class="stat-label">Endpoints</div></div>
+                <div class="stat"><div class="stat-val">100</div><div class="stat-label">Req / 15min</div></div>
+                <div class="stat"><div class="stat-val">JWT</div><div class="stat-label">Auth</div></div>
+                <div class="stat"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ARCHITECTURE -->
+        <section id="architecture" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-diagram-project"></i></div>
+            <h2>Architecture</h2>
+          </div>
+          <div class="card card-p" style="margin-bottom:14px">
+            <div class="arch-flow">
+              <div class="arch-node">
+                <div class="arch-node-icon"><i class="fa-solid fa-laptop-code"></i></div>
+                <div><div class="arch-node-label">Client</div><div class="arch-node-sub">Any HTTP client</div></div>
+              </div>
+              <div class="arch-arrow"><div class="arch-arrow-inner"><div class="arch-arrow-line"></div><i class="fa-solid fa-arrow-down arch-arrow-head"></i></div></div>
+              <div class="arch-node arch-gateway">
+                <div class="arch-gateway-title"><i class="fa-solid fa-bolt" style="margin-right:6px"></i>AI Gateway — Express.js</div>
+                <div class="arch-feature-list">
+                  <div class="arch-feature"><i class="fa-solid fa-shield-halved"></i> JWT Auth validation</div>
+                  <div class="arch-feature"><i class="fa-solid fa-gauge"></i> Rate limiting per IP</div>
+                  <div class="arch-feature"><i class="fa-solid fa-circle-check"></i> Input validation &amp; sanitization</div>
+                  <div class="arch-feature"><i class="fa-solid fa-right-left"></i> Response formatting</div>
+                  <div class="arch-feature"><i class="fa-solid fa-triangle-exclamation"></i> Centralized error handling</div>
+                </div>
+              </div>
+              <div class="arch-arrow"><div class="arch-arrow-inner"><div class="arch-arrow-line"></div><i class="fa-solid fa-arrow-down arch-arrow-head"></i></div></div>
+              <div class="arch-node">
+                <div class="arch-node-icon"><i class="fa-solid fa-database"></i></div>
+                <div><div class="arch-node-label">OpenMetadata</div><div class="arch-node-sub">REST API</div></div>
+              </div>
+            </div>
+            <div class="arch-endpoints">
+              <div class="arch-ep"><i class="fa-solid fa-magnifying-glass" style="color:#38bdf8"></i><div class="arch-ep-name">/ask</div><div class="arch-ep-desc">Natural language catalog search</div></div>
+              <div class="arch-ep"><i class="fa-solid fa-code-branch" style="color:#a78bfa"></i><div class="arch-ep-name">/impact</div><div class="arch-ep-desc">Lineage &amp; risk scoring</div></div>
+              <div class="arch-ep"><i class="fa-solid fa-database" style="color:#22d3ee"></i><div class="arch-ep-name">/sql</div><div class="arch-ep-desc">NL to SQL generation</div></div>
+              <div class="arch-ep"><i class="fa-solid fa-bell" style="color:#4ade80"></i><div class="arch-ep-name">/alerts</div><div class="arch-ep-desc">Data quality alerts</div></div>
+            </div>
+            <div class="chip-row">
+              <span class="chip"><i class="fa-brands fa-node-js" style="color:#4ade80"></i> Node.js 16+</span>
+              <span class="chip"><i class="fa-solid fa-server" style="color:#38bdf8"></i> Express 4.x</span>
+              <span class="chip"><i class="fa-solid fa-shield" style="color:#a78bfa"></i> Helmet + CORS</span>
+              <span class="chip"><i class="fa-solid fa-network-wired" style="color:#22d3ee"></i> Axios</span>
+              <span class="chip"><i class="fa-solid fa-gauge" style="color:#fb923c"></i> Rate Limiting</span>
+              <span class="chip"><i class="fa-solid fa-book" style="color:#38bdf8"></i> Swagger UI</span>
+              <span class="chip"><i class="fa-solid fa-circle-check" style="color:#4ade80"></i> express-validator</span>
+              <span class="chip"><i class="fa-solid fa-file-code" style="color:#a78bfa"></i> Morgan logging</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- QUICK START -->
+        <section id="quick-start" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-rocket"></i></div>
+            <h2>Quick Start</h2>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+
+            <div class="card card-p">
+              <div class="step-row"><span class="step-num">1</span><span class="step-title">Install dependencies</span></div>
+              <div class="code-wrap">
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                <pre>npm install express axios express-validator express-rate-limit helmet cors dotenv morgan swagger-ui-express
+npm install --save-dev nodemon jest
+mkdir config controllers middleware public routes services utils</pre>
+              </div>
+            </div>
+
+            <div class="card card-p">
+              <div class="step-row"><span class="step-num">2</span><span class="step-title">Create source files</span></div>
+              <div class="code-wrap">
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                <pre>touch server.js .env .env.example .gitignore README.md
+touch config/index.js config/swagger.js
+touch controllers/askController.js controllers/impactController.js
+touch controllers/alertsController.js controllers/sqlController.js
+touch middleware/auth.js middleware/rateLimit.js middleware/validate.js middleware/errorHandler.js
+touch public/api-docs.html
+touch routes/index.js routes/ask.js routes/impact.js routes/alerts.js routes/sql.js routes/docs.js
+touch services/openmetadata.js services/lineage.js services/formatter.js
+touch utils/helpers.js</pre>
+              </div>
+            </div>
+
+            <div class="card card-p">
+              <div class="step-row"><span class="step-num">3</span><span class="step-title">Configure &amp; run</span></div>
+              <div class="code-wrap">
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                <pre>cp .env.example .env
+# Edit .env - set OPENMETADATA_BASE_URL and OPENMETADATA_BOT_TOKEN
+
+npm run dev     # development with nodemon
+npm start       # production</pre>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- AUTHENTICATION -->
+        <section id="auth" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h2>Authentication</h2>
+          </div>
+          <div class="two-col" style="margin-bottom:14px">
+            <div class="card card-p">
+              <div class="inner-title"><i class="fa-solid fa-key"></i> Generate Token</div>
+              <div class="auth-step"><span class="auth-num">01</span><p class="auth-text">Log into your OpenMetadata instance</p></div>
+              <div class="auth-step"><span class="auth-num">02</span><p class="auth-text">Click your <strong>Profile</strong> top right</p></div>
+              <div class="auth-step"><span class="auth-num">03</span><p class="auth-text">Navigate to <strong>Access Tokens</strong></p></div>
+              <div class="auth-step"><span class="auth-num">04</span><p class="auth-text">Click <strong>Generate New Token</strong></p></div>
+              <div class="auth-step"><span class="auth-num">05</span><p class="auth-text">Copy and store the token securely</p></div>
+            </div>
+            <div class="card card-p">
+              <div class="inner-title"><i class="fa-solid fa-lock"></i> Token Security</div>
+              <div class="security-item"><i class="fa-solid fa-circle-xmark" style="color:#f87171"></i><p>Never commit the token to git</p></div>
+              <div class="security-item"><i class="fa-solid fa-circle-check" style="color:#4ade80"></i><p>Store only in <code>.env</code> file</p></div>
+              <div class="security-item"><i class="fa-solid fa-circle-info" style="color:#38bdf8"></i><p>Non-expiring until manually revoked</p></div>
+              <div class="security-item"><i class="fa-solid fa-rotate" style="color:#a78bfa"></i><p>Regenerate from OM UI if compromised</p></div>
+              <div class="security-item"><i class="fa-solid fa-eye-slash" style="color:#fb923c"></i><p>Never expose in responses or logs</p></div>
+            </div>
+          </div>
+          <div class="card card-p">
+            <div class="inner-title"><i class="fa-solid fa-code"></i> Usage</div>
+            <div class="code-wrap">
+              <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+              <pre># Add to every request header
+Authorization: Bearer &lt;your-token&gt;
+
+# Swagger UI: open /swagger, click Authorize, paste token
+http://localhost:3000/swagger</pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- ENV VARS -->
+        <section id="env" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-sliders"></i></div>
+            <h2>Environment Variables</h2>
+          </div>
+          <div class="card" style="overflow:hidden">
+            <table class="doc-table">
+              <thead>
+                <tr><th>Variable</th><th>Required</th><th>Default</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>PORT</code></td><td style="color:#64748b;font-size:12px">No</td><td style="font-family:'Fira Code',monospace;font-size:12px;color:#475569">3000</td><td>Server port</td></tr>
+                <tr><td><code>OPENMETADATA_BASE_URL</code></td><td><span class="req-yes">Yes</span></td><td style="color:#334155">—</td><td>Your OM instance URL</td></tr>
+                <tr><td><code>OPENMETADATA_BOT_TOKEN</code></td><td><span class="req-yes">Yes</span></td><td style="color:#334155">—</td><td>Personal Access Token</td></tr>
+                <tr><td><code>RATE_LIMIT_WINDOW_MS</code></td><td style="color:#64748b;font-size:12px">No</td><td style="font-family:'Fira Code',monospace;font-size:12px;color:#475569">900000</td><td>Rate limit window (15 min)</td></tr>
+                <tr><td><code>RATE_LIMIT_MAX</code></td><td style="color:#64748b;font-size:12px">No</td><td style="font-family:'Fira Code',monospace;font-size:12px;color:#475569">100</td><td>Max requests per window</td></tr>
+                <tr><td><code>NODE_ENV</code></td><td style="color:#64748b;font-size:12px">No</td><td style="font-family:'Fira Code',monospace;font-size:12px;color:#475569">development</td><td>Environment mode</td></tr>
+                <tr><td><code>CORS_ORIGIN</code></td><td style="color:#64748b;font-size:12px">No</td><td style="font-family:'Fira Code',monospace;font-size:12px;color:#475569">*</td><td>CORS allowed origins</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-label">API Reference</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <!-- POST /ask -->
+        <section id="ep-ask" class="doc-section ep-reveal">
+          <div class="card ep-card" style="overflow:hidden">
+            <button class="acc-btn open" onclick="toggleAcc(this)">
+              <div class="acc-btn-left">
+                <span class="method">POST</span>
+                <span class="acc-endpoint">/api/v1/ask</span>
+                <span class="acc-desc-inline">— Natural language catalog search</span>
+              </div>
+              <i class="fa-solid fa-chevron-down acc-icon"></i>
+            </button>
+            <div class="acc-body open" style="border-top:1px solid rgba(255,255,255,0.05)">
+              <div class="acc-inner">
+                <p class="acc-desc-text">Search the data catalog using natural language. Returns matching entities with metadata, FQN, and direct URLs.</p>
+                <div class="tag-row"><span class="tag">AI Query</span><span class="tag">catalog search</span><span class="tag">entities</span></div>
+                <div class="tab-bar">
+                  <button class="tab-btn active" onclick="switchTab(this,'ask-req')">Request</button>
+                  <button class="tab-btn" onclick="switchTab(this,'ask-res')">Response</button>
+                  <button class="tab-btn" onclick="switchTab(this,'ask-curl')">cURL</button>
+                </div>
+                <div id="ask-req" class="tab-pane">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "query": "customer"
+}</pre>
+                  </div>
+                </div>
+                <div id="ask-res" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "success": true,
+  "timestamp": "2026-04-21T03:25:59.520Z",
+  "data": {
+    "query": "customer",
+    "answer": "Found 10 table(s) related to customer...",
+    "sources": [
+      {
+        "name": "dim_customer",
+        "fqn":  "sample_redshift.staging_db.integration.dim_customer",
+        "type": "table",
+        "url":  "https://sandbox.open-metadata.org/table/..."
+      }
+    ],
+    "confidence": "medium"
+  },
+  "meta": { "requestId": "1776741959520-tw9wn5cjj" }
+}</pre>
+                  </div>
+                </div>
+                <div id="ask-curl" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>curl -X POST http://localhost:3000/api/v1/ask \
+  -H "Authorization: Bearer &lt;your-token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"customer"}'</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- POST /impact -->
+        <section id="ep-impact" class="doc-section ep-reveal">
+          <div class="card ep-card" style="overflow:hidden">
+            <button class="acc-btn open" onclick="toggleAcc(this)">
+              <div class="acc-btn-left">
+                <span class="method">POST</span>
+                <span class="acc-endpoint">/api/v1/impact</span>
+                <span class="acc-desc-inline">— Analyze schema change impact</span>
+              </div>
+              <i class="fa-solid fa-chevron-down acc-icon"></i>
+            </button>
+            <div class="acc-body open" style="border-top:1px solid rgba(255,255,255,0.05)">
+              <div class="acc-inner">
+                <p class="acc-desc-text">Analyzes downstream lineage to determine risk and affected assets for proposed schema changes.</p>
+                <div class="tag-row"><span class="tag">Impact Analysis</span><span class="tag">lineage</span><span class="tag">risk scoring</span></div>
+                <div class="tab-bar">
+                  <button class="tab-btn active" onclick="switchTab(this,'impact-req')">Request</button>
+                  <button class="tab-btn" onclick="switchTab(this,'impact-res')">Response</button>
+                  <button class="tab-btn" onclick="switchTab(this,'impact-curl')">cURL</button>
+                </div>
+                <div id="impact-req" class="tab-pane">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "table":  "sample_redshift.staging_db.integration.dim_customer",
+  "change": "rename column customer_id to user_id"
+}</pre>
+                  </div>
+                </div>
+                <div id="impact-res" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "success": true,
+  "data": {
+    "change": { "type": "rename", "severity": "high" },
+    "riskScore": 0,
+    "riskLevel": "low",
+    "affectedAssets": {
+      "upstream": [], "downstream": [],
+      "totalUpstream": 0, "totalDownstream": 0
+    },
+    "recommendations": ["Use alias/view to maintain backward compatibility"]
+  }
+}</pre>
+                  </div>
+                </div>
+                <div id="impact-curl" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>curl -X POST http://localhost:3000/api/v1/impact \
+  -H "Authorization: Bearer &lt;your-token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"table":"sample_redshift.staging_db.integration.dim_customer","change":"rename column customer_id to user_id"}'</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- POST /sql -->
+        <section id="ep-sql" class="doc-section ep-reveal">
+          <div class="card ep-card" style="overflow:hidden">
+            <button class="acc-btn open" onclick="toggleAcc(this)">
+              <div class="acc-btn-left">
+                <span class="method">POST</span>
+                <span class="acc-endpoint">/api/v1/sql</span>
+                <span class="acc-desc-inline">— Generate SQL from natural language</span>
+              </div>
+              <i class="fa-solid fa-chevron-down acc-icon"></i>
+            </button>
+            <div class="acc-body open" style="border-top:1px solid rgba(255,255,255,0.05)">
+              <div class="acc-inner">
+                <p class="acc-desc-text">Generates SQL queries using catalog schema context. Searches relevant tables and builds SQL from column metadata.</p>
+                <div class="tag-row"><span class="tag">SQL Generation</span><span class="tag">NL to SQL</span><span class="tag">schema context</span></div>
+                <div class="tab-bar">
+                  <button class="tab-btn active" onclick="switchTab(this,'sql-req')">Request</button>
+                  <button class="tab-btn" onclick="switchTab(this,'sql-res')">Response</button>
+                  <button class="tab-btn" onclick="switchTab(this,'sql-curl')">cURL</button>
+                </div>
+                <div id="sql-req" class="tab-pane">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "question": "Show me total revenue by customer region",
+  "tables":   ["sample_redshift.staging_db.integration.dim_customer"]
+}</pre>
+                  </div>
+                </div>
+                <div id="sql-res" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "success": true,
+  "data": {
+    "sql": "SELECT customer_region, SUM(revenue) FROM dim_customer GROUP BY customer_region LIMIT 100;",
+    "explanation": "Generated SQL using 1 table(s)",
+    "tablesUsed": [
+      { "name": "dim_customer", "columns": ["customer_key","customer_id","customer_region"] }
+    ],
+    "warnings": [],
+    "estimatedComplexity": "simple"
+  }
+}</pre>
+                  </div>
+                </div>
+                <div id="sql-curl" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>curl -X POST http://localhost:3000/api/v1/sql \
+  -H "Authorization: Bearer &lt;your-token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"question":"Show me total revenue by customer region","tables":["sample_redshift.staging_db.integration.dim_customer"]}'</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- POST /alerts -->
+        <section id="ep-alerts" class="doc-section ep-reveal">
+          <div class="card ep-card" style="overflow:hidden">
+            <button class="acc-btn open" onclick="toggleAcc(this)">
+              <div class="acc-btn-left">
+                <span class="method">POST</span>
+                <span class="acc-endpoint">/api/v1/alerts</span>
+                <span class="acc-desc-inline">— Send data quality alerts</span>
+              </div>
+              <i class="fa-solid fa-chevron-down acc-icon"></i>
+            </button>
+            <div class="acc-body open" style="border-top:1px solid rgba(255,255,255,0.05)">
+              <div class="acc-inner">
+                <p class="acc-desc-text">Fetches test case results and formats alert payloads for external notification channels.</p>
+                <div class="tag-row"><span class="tag">slack</span><span class="tag">email</span><span class="tag">webhook</span><span class="tag">pagerduty</span><span class="tag">teams</span></div>
+                <div class="tab-bar">
+                  <button class="tab-btn active" onclick="switchTab(this,'alerts-req')">Request</button>
+                  <button class="tab-btn" onclick="switchTab(this,'alerts-res')">Response</button>
+                  <button class="tab-btn" onclick="switchTab(this,'alerts-curl')">cURL</button>
+                </div>
+                <div id="alerts-req" class="tab-pane">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "testCaseId": "803e26db-eea4-4e24-99ce-a57cd80117fd",
+  "channels":  ["slack", "email"]
+}</pre>
+                  </div>
+                </div>
+                <div id="alerts-res" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>{
+  "success": true,
+  "data": {
+    "testCaseId": "803e26db-eea4-4e24-99ce-a57cd80117fd",
+    "alertSent": true,
+    "channels": [
+      { "channel": "slack", "sent": true, "preview": "MEDIUM | Test customer_id_test Failed" },
+      { "channel": "email", "sent": true }
+    ],
+    "summary": "Alert formatted for 2 channel(s)"
+  }
+}</pre>
+                  </div>
+                </div>
+                <div id="alerts-curl" class="tab-pane hidden">
+                  <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+                    <pre>curl -X POST http://localhost:3000/api/v1/alerts \
+  -H "Authorization: Bearer &lt;your-token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"testCaseId":"803e26db-eea4-4e24-99ce-a57cd80117fd","channels":["slack","email"]}'</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VALIDATION -->
+        <section id="validation" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <h2>Validation Rules</h2>
+          </div>
+          <div class="card" style="overflow:hidden">
+            <table class="doc-table">
+              <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+              <tbody>
+                <tr><td><code>query</code></td><td>Required · max 500 chars</td></tr>
+                <tr><td><code>table</code> (FQN)</td><td>Required · format: <code>service.schema.table</code> or deeper</td></tr>
+                <tr><td><code>change</code></td><td>Required · max 200 chars</td></tr>
+                <tr><td><code>question</code></td><td>Required · max 500 chars</td></tr>
+                <tr><td><code>tables[]</code></td><td>Optional · max 10 items</td></tr>
+                <tr><td><code>testCaseId</code></td><td>Required · valid UUID format</td></tr>
+                <tr><td><code>channels[]</code></td><td>Required · min 1 · max 5 · <code>slack | email | webhook | pagerduty | teams</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ERRORS -->
+        <section id="errors" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h2>Error Format</h2>
+          </div>
+          <div class="card card-p" style="margin-bottom:16px">
+            <div class="code-wrap">
+              <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+              <pre>{
+  "error":     "Descriptive message",
+  "code":      "ERROR_CODE",
+  "timestamp": "2026-04-21T03:11:03.326Z",
+  "path":      "/api/v1/ask",
+  "details":   {}
+}</pre>
+            </div>
+          </div>
+          <div class="error-grid">
+            <div class="card error-card"><div class="error-code" style="color:#38bdf8">400</div><div class="error-name">Bad Request</div><div class="error-desc">Validation error or invalid fields</div></div>
+            <div class="card error-card"><div class="error-code" style="color:#f87171">401</div><div class="error-name">Unauthorized</div><div class="error-desc">Invalid or missing Bearer token</div></div>
+            <div class="card error-card"><div class="error-code" style="color:#fb923c">429</div><div class="error-name">Too Many Requests</div><div class="error-desc">Rate limit exceeded for IP address</div></div>
+          </div>
+        </section>
+
+        <!-- RATE LIMITS -->
+        <section id="rate-limits" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-gauge"></i></div>
+            <h2>Rate Limiting</h2>
+          </div>
+          <div class="two-col">
+            <div class="card card-p" style="display:flex;align-items:center;gap:18px">
+              <div class="rate-icon-box"><i class="fa-solid fa-clock"></i></div>
+              <div>
+                <div style="font-size:22px;font-weight:900;color:#fff">100 <span style="font-size:14px;font-weight:400;color:#64748b">requests</span></div>
+                <div style="font-size:12px;color:#334155;margin-top:2px">per 15-minute window · per IP</div>
+              </div>
+            </div>
+            <div class="card card-p">
+              <div class="rate-label">Response Headers</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="font-family:'Fira Code',monospace;font-size:12px;color:#94a3b8"><span style="color:#38bdf8">RateLimit-Limit</span> — max requests allowed</div>
+                <div style="font-family:'Fira Code',monospace;font-size:12px;color:#94a3b8"><span style="color:#38bdf8">RateLimit-Remaining</span> — requests left</div>
+                <div style="font-family:'Fira Code',monospace;font-size:12px;color:#94a3b8"><span style="color:#38bdf8">RateLimit-Reset</span> — window reset time</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SCRIPTS -->
+        <section id="scripts" class="doc-section ep-reveal">
+          <div class="section-head">
+            <div class="section-icon"><i class="fa-solid fa-terminal"></i></div>
+            <h2>Scripts</h2>
+          </div>
+          <div class="scripts-grid">
+            <div class="card script-card"><div class="script-cmd">npm start</div><div class="script-desc">Production server</div></div>
+            <div class="card script-card"><div class="script-cmd">npm run dev</div><div class="script-desc">Development with nodemon</div></div>
+            <div class="card script-card"><div class="script-cmd">npm test</div><div class="script-desc">Run Jest test suite</div></div>
+          </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+          <div class="footer-logo">
+            <div class="logo-icon" style="width:26px;height:26px;border-radius:7px"><i class="fa-solid fa-bolt" style="font-size:11px"></i></div>
+            <span class="footer-name">OpenMetadata <span>AI Gateway</span></span>
+          </div>
+          <div class="footer-copy">MIT License · v1.0.0</div>
+        </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <button id="top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+      /* 1. TYPING EFFECT
+         Key fix: charIdx starts at 0, we increment BEFORE slicing.
+         The cursor is a sibling span with solid background — not inside
+         the gradient span, so -webkit-text-fill-color doesn't affect it. */
+      var typedEl  = document.getElementById('typed-text');
+      var cursorEl = document.getElementById('cursor');
+      var fullText = 'AI Gateway';
+      var charIdx  = 0;
+
+      function typeNext() {
+        charIdx++;
+        typedEl.textContent = fullText.slice(0, charIdx);
+        if (charIdx < fullText.length) {
+          setTimeout(typeNext, 90);
+        } else {
+          setTimeout(function() {
+            cursorEl.style.animation = 'none';
+            cursorEl.style.opacity = '0';
+          }, 3500);
+        }
+      }
+      setTimeout(typeNext, 500);
+
+      /* 2. SIDEBAR STAGGER — GSAP if available, fallback otherwise */
+      var navLinks = document.querySelectorAll('.nav-link');
+      if (typeof gsap !== 'undefined') {
+        gsap.set(navLinks, { opacity: 0, x: -16 });
+        gsap.to(navLinks, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out', stagger: 0.055, delay: 0.2 });
+      } else {
+        navLinks.forEach(function(l) { l.style.opacity = '1'; });
+      }
+
+      /* 3. SECTION SCROLL REVEAL — GSAP ScrollTrigger or IntersectionObserver */
+      var reveals = document.querySelectorAll('.ep-reveal');
+      if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+        reveals.forEach(function(el) {
+          gsap.fromTo(el,
+            { opacity: 0, y: 28 },
+            { opacity: 1, y: 0, duration: 0.58, ease: 'power2.out',
+              scrollTrigger: { trigger: el, start: 'top 88%', once: true } }
+          );
+        });
+      } else {
+        var io = new IntersectionObserver(function(entries) {
+          entries.forEach(function(e) {
+            if (e.isIntersecting) {
+              e.target.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+              e.target.style.opacity = '1';
+              e.target.style.transform = 'translateY(0)';
+              io.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.08 });
+        reveals.forEach(function(el) {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(28px)';
+          io.observe(el);
+        });
+      }
+
+      /* ACTIVE NAV */
+      var sections = document.querySelectorAll('section[id]');
+      function highlightNav() {
+        var current = '';
+        sections.forEach(function(s) { if (window.scrollY >= s.offsetTop - 80) current = s.id; });
+        navLinks.forEach(function(l) { l.classList.toggle('active', l.getAttribute('href') === '#' + current); });
+      }
+      navLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          var t = document.querySelector(link.getAttribute('href'));
+          if (t) t.scrollIntoView({ behavior: 'smooth' });
+          document.getElementById('sidebar').classList.remove('open');
+          document.getElementById('overlay').style.display = 'none';
+        });
+      });
+      window.addEventListener('scroll', highlightNav, { passive: true });
+      highlightNav();
+
+      /* BACK TO TOP */
+      var topBtn = document.getElementById('top-btn');
+      window.addEventListener('scroll', function() {
+        topBtn.classList.toggle('show', window.scrollY > 400);
+      }, { passive: true });
+    });
+
+    /* Global functions (called by inline onclick) */
+    function toggleSidebar() {
+      var sb = document.getElementById('sidebar');
+      var ov = document.getElementById('overlay');
+      var open = sb.classList.toggle('open');
+      ov.style.display = open ? 'block' : 'none';
+    }
+
+    function toggleAcc(btn) {
+      btn.classList.toggle('open');
+      btn.nextElementSibling.classList.toggle('open');
+    }
+
+    function switchTab(btn, paneId) {
+      var section = btn.closest('section');
+      section.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      section.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.add('hidden'); });
+      btn.classList.add('active');
+      var pane = document.getElementById(paneId);
+      if (pane) pane.classList.remove('hidden');
+    }
+
+    function copyCode(btn) {
+      var pre = btn.closest('.code-wrap').querySelector('pre');
+      navigator.clipboard.writeText(pre.innerText).then(function() {
+        btn.innerHTML = '<i class="fa-solid fa-check" style="color:#4ade80"></i>';
+        setTimeout(function() { btn.innerHTML = '<i class="fa-regular fa-copy"></i>'; }, 1800);
+      });
+    }
+  </script>
+</body>
+</html>
